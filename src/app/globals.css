@@ -1,26 +1,166 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+	--background: #ffffff;
+	--foreground: #000000;
+	--primary: #0066ff;
+	--primary-dark: #0044cc;
+	--secondary: #00cc88;
+	--accent: #ff6600;
+	--muted: #f0f0f0;
+	--muted-foreground: #555555;
+	--card-bg: #ffffff;
+	--card-foreground: #000000;
+	--border: #dddddd;
+	--input: #dddddd;
+	--ring: #0066ff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--font-sans: var(--font-geist-sans);
+	--font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Forcing dark mode for all users */
+:root {
+	--background: #000000;
+	--foreground: #ffffff;
+	--primary: #ffffff;
+	--primary-dark: #cccccc;
+	--secondary: #cccccc;
+	--accent: #ffffff;
+	--muted: #111111;
+	--muted-foreground: #e0e0e0;
+	--card-bg: #0a0a0a;
+	--card-foreground: #ffffff;
+	--border: #444444;
+	--input: #222222;
+	--ring: #ffffff;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+	body {
+		@apply bg-background text-foreground;
+		font-family: var(--font-geist-sans);
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply font-semibold tracking-tight;
+	}
+
+	h1 {
+		@apply text-4xl md:text-5xl;
+	}
+
+	h2 {
+		@apply text-3xl md:text-4xl;
+	}
+
+	h3 {
+		@apply text-2xl md:text-3xl;
+	}
+
+	h4 {
+		@apply text-xl md:text-2xl;
+	}
+}
+
+@layer components {
+	.btn {
+		@apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:pointer-events-none disabled:opacity-50;
+	}
+
+	.btn-primary {
+		@apply bg-white text-black hover:bg-gray-200;
+	}
+
+	.btn-secondary {
+		@apply bg-gray-200 text-black hover:bg-gray-300;
+	}
+
+	.btn-outline {
+		@apply border border-gray-600 bg-transparent hover:bg-gray-800 text-white;
+	}
+
+	.card {
+		@apply rounded-lg border border-gray-700 bg-black p-4 shadow-md;
+	}
+}
+
+.audio-player {
+	@apply w-full overflow-hidden rounded-md shadow-md bg-black;
+}
+
+.visualizer {
+	@apply h-8 md:h-12 w-full bg-gray-900 rounded-md overflow-hidden;
+}
+
+.program-item {
+	@apply flex items-center justify-between py-3 border-b border-gray-700 hover:bg-gray-900 transition-colors;
+}
+
+.playlist-item {
+	@apply flex items-center space-x-4 p-3 rounded-md hover:bg-gray-900 transition-colors;
+}
+
+/* Animation for radio visualization */
+@keyframes pulse {
+	0% {
+		height: 25%;
+	}
+	50% {
+		height: 75%;
+	}
+	100% {
+		height: 25%;
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.fade-in {
+	animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes blink {
+	0%,
+	100% {
+		opacity: 0.3;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+.animate-blink {
+	animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes slideIn {
+	from {
+		transform: translateY(10px);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+.slide-in {
+	animation: slideIn 0.3s ease-out;
 }
