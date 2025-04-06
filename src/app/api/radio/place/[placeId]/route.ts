@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	request: Request,
+	context: { params: Promise<{ placeId: string }> }
 ) {
-	const { params } = await request.json();
-	const { placeId } = params;
+	const { placeId } = await context.params;
 
 	if (!placeId) {
 		return NextResponse.json(
@@ -28,6 +28,12 @@ export async function GET(
 		const data = await response.json();
 		return NextResponse.json(data);
 	} catch (error) {
+		if (error instanceof Error) {
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 500 },
+			);
+		}
 		console.error(
 			`Error proxying place details request for place ${placeId}:`,
 			error,

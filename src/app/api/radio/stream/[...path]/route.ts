@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	request: Request,
+	context: { params: Promise<{ path: string[] }> }
 ) {
-	const { params } = await request.json();
-	const { path } = params;
+	const { path } = await context.params;
 
 	if (!path || path.length === 0) {
 		return NextResponse.json(
@@ -46,7 +46,7 @@ export async function GET(
 			console.error(`Stream responded with status: ${response.status}`);
 			return NextResponse.json(
 				{
-					error: "Failed to proxy stream",
+					error: `Stream responded with status: ${response.status}`,
 					status: response.status,
 				},
 				{ status: response.status },
@@ -87,12 +87,14 @@ export async function GET(
 
 		return streamResponse;
 	} catch (error) {
-		console.error("Error proxying stream:", error);
+		if (error instanceof Error) {
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 500 },
+			);
+		}
 		return NextResponse.json(
-			{
-				error: "Failed to proxy stream",
-				message: error instanceof Error ? error.message : "Unknown error",
-			},
+			{ error: "Failed to proxy stream" },
 			{ status: 500 },
 		);
 	}

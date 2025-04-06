@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	request: Request,
+	context: { params: Promise<{ placeId: string }> }
 ) {
-	const { params } = await request.json();
-	const { placeId } = params;
+	const { placeId } = await context.params;
 
 	if (!placeId) {
 		return NextResponse.json(
@@ -32,9 +32,7 @@ export async function GET(
 		let data: unknown;
 		try {
 			data = JSON.parse(responseText);
-		} catch (parseError) {
-			console.error(`Failed to parse JSON response for place ${placeId}:`, parseError);
-			console.error(`Response text: ${responseText}`);
+		} catch {
 			return NextResponse.json(
 				{ error: "Invalid JSON response from API" },
 				{ status: 500 },
@@ -43,10 +41,12 @@ export async function GET(
 
 		return NextResponse.json(data);
 	} catch (error) {
-		console.error(
-			`Error proxying channels request for place ${placeId}:`,
-			error,
-		);
+		if (error instanceof Error) {
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 500 },
+			);
+		}
 		return NextResponse.json(
 			{ error: "Failed to fetch place channels" },
 			{ status: 500 },

@@ -74,7 +74,7 @@ const countryList: { [key: string]: string | string[] } = {
 	FO: "Faroe Islands",
 	FJ: "Fiji",
 	FI: "Finland",
-	FR: "France",
+	FR: ["France", "Guadeloupe"],
 	GF: "French Guiana",
 	PF: "French Polynesia",
 	TF: "French Southern Territories",

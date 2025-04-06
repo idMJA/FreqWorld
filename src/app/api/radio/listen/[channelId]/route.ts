@@ -27,10 +27,10 @@ interface ChannelData {
 
 export async function GET(
 	request: Request,
+	context: { params: Promise<{ channelId: string }> }
 ) {
 	try {
-		const { params } = await request.json();
-		const { channelId } = params;
+		const { channelId } = await context.params;
 
 		if (!channelId) {
 			return NextResponse.json(

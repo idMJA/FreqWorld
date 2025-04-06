@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	request: Request,
+	context: { params: Promise<{ channelId: string }> }
 ) {
-	const { params } = await request.json();
-	const { channelId } = params;
+	const { channelId } = await context.params;
 
 	if (!channelId) {
 		return NextResponse.json(
@@ -28,10 +28,12 @@ export async function GET(
 		const data = await response.json();
 		return NextResponse.json(data);
 	} catch (error) {
-		console.error(
-			`Error proxying channel details request for channel ${channelId}:`,
-			error,
-		);
+		if (error instanceof Error) {
+			return NextResponse.json(
+				{ error: error.message },
+				{ status: 500 },
+			);
+		}
 		return NextResponse.json(
 			{ error: "Failed to fetch channel details" },
 			{ status: 500 },

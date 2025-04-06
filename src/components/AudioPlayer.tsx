@@ -305,6 +305,7 @@ const AudioPlayer = ({
 									.play()
 									.then(() => {
 										setIsPlaying(true);
+										setError(null);
 									})
 									.catch((playError) => {
 										console.error("Error playing audio:", playError);
@@ -344,27 +345,35 @@ const AudioPlayer = ({
 		const audioElement = audioRef.current;
 
 		const handlePlay = () => {
-			setIsPlaying(true);
+			if (audioRef.current) {
+				setIsPlaying(true);
+				setError(null);
+				
+				// When audio actually starts playing, this is a good time to add to recently played
+				if (channelId && channelTitle) {
+					let stationTitleForRecent = channelTitle;
+					let locationInfo = "";
 
-			// When audio actually starts playing, this is a good time to add to recently played
-			if (channelId && channelTitle) {
-				let stationTitleForRecent = channelTitle;
-				let locationInfo = "";
+					if (channelTitle.includes("(") && channelTitle.includes(")")) {
+						const start = channelTitle.indexOf("(");
+						const end = channelTitle.indexOf(")");
+						locationInfo = channelTitle.substring(start + 1, end).trim();
+						stationTitleForRecent = channelTitle.substring(0, start).trim();
+					}
 
-				if (channelTitle.includes("(") && channelTitle.includes(")")) {
-					const start = channelTitle.indexOf("(");
-					const end = channelTitle.indexOf(")");
-					locationInfo = channelTitle.substring(start + 1, end).trim();
-					stationTitleForRecent = channelTitle.substring(0, start).trim();
+					// Add to recently played again to make sure it's recorded when actually played
+					// Only record it if we actually have sound playing (after 1 second of playback)
+					setTimeout(() => {
+						if (audioRef.current && !audioRef.current.paused) {
+							addToRecentlyPlayed(stationTitleForRecent, channelId, locationInfo);
+						}
+					}, 1000);
 				}
 
-				// Add to recently played again to make sure it's recorded when actually played
-				// Only record it if we actually have sound playing (after 1 second of playback)
-				setTimeout(() => {
-					if (audioElement && !audioElement.paused) {
-						addToRecentlyPlayed(stationTitleForRecent, channelId, locationInfo);
-					}
-				}, 1000);
+				// Create visualizer if it doesn't exist
+				if (!audioMotionRef.current && visualizerRef.current) {
+					// ... existing code ...
+				}
 			}
 		};
 
@@ -726,6 +735,22 @@ const AudioPlayer = ({
 			}
 		};
 	}, [loading, channelId, streamUrl, autoPlay]);
+
+	// Add canplay event listener to clear errors when audio is ready to play
+	useEffect(() => {
+		const audioElement = audioRef.current;
+		if (audioElement) {
+			const handleCanPlay = () => {
+				setError(null);
+			};
+			
+			audioElement.addEventListener('canplay', handleCanPlay);
+			
+			return () => {
+				audioElement.removeEventListener('canplay', handleCanPlay);
+			};
+		}
+	}, []);
 
 	return (
 		<div className="audio-player w-full card border border-gray-800 bg-black">
