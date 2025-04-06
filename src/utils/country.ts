@@ -1,3 +1,10 @@
+/**
+ * Country utility functions
+ * This module provides utilities for working with country codes and names,
+ * including detection of country information from text.
+ */
+
+// Country code to country name mapping
 const countryList: { [key: string]: string | string[] } = {
 	AF: "Afghanistan",
 	AL: "Albania",
@@ -178,7 +185,7 @@ const countryList: { [key: string]: string | string[] } = {
 	PT: ["Portugal", "Madeira"],
 	PR: "Puerto Rico",
 	QA: "Qatar",
-	MK: "Republic of North Macedonia",
+	MK: "North Macedonia",
 	RO: "Romania",
 	RU: "Russia",
 	RW: "Rwanda",
@@ -233,8 +240,7 @@ const countryList: { [key: string]: string | string[] } = {
 	UA: "Ukraine",
 	AE: "United Arab Emirates",
 	GB: "United Kingdom of Great Britain and Northern Ireland",
-	UM: "United States Minor Outlying Islands",
-	US: "United States of America",
+	US: ["United States", "United States Minor Outlying Islands"],
 	UY: "Uruguay",
 	UZ: "Uzbekistan",
 	VU: "Vanuatu",
@@ -250,10 +256,22 @@ const countryList: { [key: string]: string | string[] } = {
 	AX: "Åland Islands",
 };
 
+/**
+ * Get country name from country code
+ * @param code The country code to look up
+ * @returns The country name or empty string if not found
+ */
 export function searchCountrybyCode(code: string): string {
-	return countryList[code] as string;
+	const country = countryList[code];
+	if (!country) return "";
+	return Array.isArray(country) ? country[0] : country;
 }
 
+/**
+ * Get country code from country name
+ * @param name The country name to look up
+ * @returns The country code or empty string if not found
+ */
 export function searchCountrybyName(name: string): string {
 	if (!name) return "";
 
@@ -278,221 +296,9 @@ export function searchCountrybyName(name: string): string {
 		return country.toLowerCase() === nameLower;
 	});
 
-	// If still not found, try fuzzy matching for common variations
-	if (!result) {
-		if (
-			nameLower.includes("united states") ||
-			nameLower === "usa" ||
-			nameLower === "us" ||
-			nameLower === "america"
-		)
-			return "US";
-		if (
-			nameLower.includes("united kingdom") ||
-			nameLower === "uk" ||
-			nameLower === "britain" ||
-			nameLower === "great britain" ||
-			nameLower === "england"
-		)
-			return "GB";
-		if (
-			nameLower.includes("japan") ||
-			nameLower === "jpn" ||
-			nameLower === "tokyo"
-		)
-			return "JP";
-		if (
-			nameLower.includes("indonesia") ||
-			nameLower === "idn" ||
-			nameLower === "jakarta" ||
-			nameLower === "bali"
-		)
-			return "ID";
-		if (
-			nameLower.includes("malaysia") ||
-			nameLower === "mys" ||
-			nameLower === "kuala lumpur"
-		)
-			return "MY";
-		if (nameLower.includes("singapore") || nameLower === "sgp") return "SG";
-		if (
-			(nameLower.includes("korea") && !nameLower.includes("north")) ||
-			nameLower === "seoul" ||
-			nameLower === "south korea"
-		)
-			return "KR";
-		if (
-			nameLower.includes("russia") ||
-			nameLower === "russian federation" ||
-			nameLower === "moscow"
-		)
-			return "RU";
-		if (
-			nameLower.includes("italy") ||
-			nameLower === "italia" ||
-			nameLower === "rome" ||
-			nameLower === "milano" ||
-			nameLower === "milan"
-		)
-			return "IT";
-		if (
-			nameLower.includes("czech") ||
-			nameLower === "czechia" ||
-			nameLower === "prague"
-		)
-			return "CZ";
-		if (nameLower.includes("bahamas")) return "BS";
-		if (nameLower.includes("sint maarten")) return "SX";
-		if (
-			nameLower.includes("australia") ||
-			nameLower === "sydney" ||
-			nameLower === "melbourne"
-		)
-			return "AU";
-		if (
-			nameLower.includes("canada") ||
-			nameLower === "toronto" ||
-			nameLower === "montreal" ||
-			nameLower === "vancouver"
-		)
-			return "CA";
-		if (nameLower.includes("france") || nameLower === "paris") return "FR";
-		if (
-			nameLower.includes("germany") ||
-			nameLower === "berlin" ||
-			nameLower === "munchen" ||
-			nameLower === "munich"
-		)
-			return "DE";
-		if (
-			nameLower.includes("spain") ||
-			nameLower === "madrid" ||
-			nameLower === "barcelona"
-		)
-			return "ES";
-		if (
-			nameLower.includes("brazil") ||
-			nameLower === "brasil" ||
-			nameLower === "rio" ||
-			nameLower === "sao paulo"
-		)
-			return "BR";
-		if (
-			nameLower.includes("netherlands") ||
-			nameLower === "holland" ||
-			nameLower === "amsterdam" ||
-			nameLower === "dutch"
-		)
-			return "NL";
-		if (nameLower.includes("new zealand") || nameLower === "auckland")
-			return "NZ";
-		if (
-			nameLower.includes("china") ||
-			nameLower === "beijing" ||
-			nameLower === "shanghai"
-		)
-			return "CN";
-		if (
-			nameLower.includes("india") ||
-			nameLower === "mumbai" ||
-			nameLower === "delhi"
-		)
-			return "IN";
-		if (
-			nameLower.includes("israel") ||
-			nameLower === "tel aviv" ||
-			nameLower === "jerusalem"
-		)
-			return "IL";
-		if (nameLower.includes("chile") || nameLower === "santiago") return "CL";
-		if (nameLower.includes("thailand") || nameLower === "bangkok") return "TH";
-		if (
-			nameLower.includes("south africa") ||
-			nameLower === "johannesburg" ||
-			nameLower === "cape town"
-		)
-			return "ZA";
-		if (nameLower.includes("egypt") || nameLower === "cairo") return "EG";
-		if (nameLower.includes("ireland") || nameLower === "dublin") return "IE";
-		if (nameLower.includes("hong kong")) return "HK";
-	}
+	if (result) return result;
 
-	return result || "";
-}
-
-// Central location mappings - consolidating the duplicated mappings from components
-const popularCities: { [key: string]: string } = {
-	Tokyo: "JP",
-	Osaka: "JP",
-	Rome: "IT",
-	Milan: "IT",
-	Verona: "IT",
-	"New York": "US",
-	"Los Angeles": "US",
-	Chicago: "US",
-	London: "GB",
-	Manchester: "GB",
-	Paris: "FR",
-	Berlin: "DE",
-	Jakarta: "ID",
-	"Kuala Lumpur": "MY",
-	Singapore: "SG",
-	Bangkok: "TH",
-	"Hong Kong": "HK",
-	Sydney: "AU",
-	Melbourne: "AU",
-	Seoul: "KR",
-	Beijing: "CN",
-	Moscow: "RU",
-	Toronto: "CA",
-	Montreal: "CA",
-	Vancouver: "CA",
-	Amsterdam: "NL",
-	Madrid: "ES",
-	Barcelona: "ES",
-	Bali: "ID",
-};
-
-const commonCountries = [
-	{ name: "Japan", code: "JP" },
-	{ name: "Italy", code: "IT" },
-	{ name: "Italia", code: "IT" },
-	{ name: "United States", code: "US" },
-	{ name: "USA", code: "US" },
-	{ name: "UK", code: "GB" },
-	{ name: "England", code: "GB" },
-	{ name: "Indonesia", code: "ID" },
-	{ name: "Malaysia", code: "MY" },
-	{ name: "Singapore", code: "SG" },
-	{ name: "Australia", code: "AU" },
-	{ name: "Canada", code: "CA" },
-	{ name: "France", code: "FR" },
-	{ name: "Germany", code: "DE" },
-	{ name: "Brazil", code: "BR" },
-	{ name: "Netherlands", code: "NL" },
-	{ name: "Spain", code: "ES" },
-	{ name: "India", code: "IN" },
-	{ name: "China", code: "CN" },
-	{ name: "Russia", code: "RU" },
-	{ name: "Israel", code: "IL" },
-	{ name: "Chile", code: "CL" },
-	{ name: "Korea", code: "KR" },
-	{ name: "The Bahamas", code: "BS" },
-	{ name: "Czech Republic", code: "CZ" },
-];
-
-/**
- * Splits text into words that can be checked individually for country names
- * @param text Text to split into words
- * @returns Array of words that could potentially be country/city names
- */
-function splitTextIntoWords(text: string): string[] {
-	if (!text) return [];
-
-	return text
-		.replace(/[()[\]{}]/g, " ") // Remove brackets
-		.split(/[\s,.-]+/) // Split by spaces, commas, periods, hyphens
-		.filter((word) => word.length > 2); // Skip short words
+	return "";
 }
 
 /**
@@ -528,45 +334,56 @@ export function getLastPartAfterComma(text: string): string {
 }
 
 /**
- * Checks if a text contains any of the common cities
- * @param text Text to check for city names
- * @returns Object with city name and country code if found
+ * Splits text into words that can be checked individually for country names
+ * @param text Text to split into words
+ * @returns Array of words that could potentially be country/city names
  */
-function checkForCommonCities(
-	text: string,
-): { name: string; code: string } | null {
-	if (!text) return null;
+function splitTextIntoWords(text: string): string[] {
+	if (!text) return [];
 
-	const textLower = text.toLowerCase();
-
-	for (const [city, code] of Object.entries(popularCities)) {
-		if (textLower.includes(city.toLowerCase())) {
-			return { name: city, code };
-		}
-	}
-
-	return null;
+	return text
+		.replace(/[()[\]{}]/g, " ") // Remove brackets
+		.split(/[\s,.-]+/) // Split by spaces, commas, periods, hyphens
+		.filter((word) => word.length > 2); // Skip short words
 }
 
 /**
- * Checks if a text contains any of the common countries
- * @param text Text to check for country names
- * @returns Object with country name and code if found
+ * Get country code from text using multiple strategies
+ * @param text Text to analyze for country information
+ * @returns Object with country code and location name
  */
-function checkForCommonCountries(
-	text: string,
-): { name: string; code: string } | null {
-	if (!text) return null;
+export function getCountryFromText(text: string): {
+	countryCode: string;
+	locationName: string;
+} {
+	if (!text) return { countryCode: "", locationName: "" };
 
-	const textLower = text.toLowerCase();
-
-	for (const country of commonCountries) {
-		if (textLower.includes(country.name.toLowerCase())) {
-			return country;
+	// Step 1: If text contains comma, try the last part (typically country name)
+	if (text.includes(",")) {
+		const lastPart = getLastPartAfterComma(text);
+		const countryCode = searchCountrybyName(lastPart);
+		if (countryCode) {
+			return { countryCode, locationName: lastPart };
 		}
 	}
 
-	return null;
+	// Step 2: Try direct match with country or location name
+	const directMatchCode = searchCountrybyName(text);
+	if (directMatchCode) {
+		return { countryCode: directMatchCode, locationName: text };
+	}
+
+	// Step 3: Split text into words and check each word
+	const words = splitTextIntoWords(text);
+	for (const word of words) {
+		const wordCountryCode = searchCountrybyName(word);
+		if (wordCountryCode) {
+			return { countryCode: wordCountryCode, locationName: word };
+		}
+	}
+
+	// Return empty if no match found
+	return { countryCode: "", locationName: "" };
 }
 
 /**
@@ -593,85 +410,5 @@ export function detectLocationFromText(text: string): {
 	}
 
 	// Try to find country or city in the full text
-	const result = getCountryFromText(text);
-	if (result.countryCode) {
-		return result;
-	}
-
-	// If nothing found, return empty values
-	return { countryCode: "", locationName: "" };
-}
-
-/**
- * Get country code from text using multiple strategies
- * @param text Text to analyze for country information
- * @returns Object with country code and location name
- */
-export function getCountryFromText(text: string): {
-	countryCode: string;
-	locationName: string;
-} {
-	if (!text) return { countryCode: "", locationName: "" };
-
-	// Step 1: If text contains comma, try the last part (typically country name)
-	const countryToCheck = text;
-
-	if (text.includes(",")) {
-		const lastPart = getLastPartAfterComma(text);
-		const countryCode = searchCountrybyName(lastPart);
-		if (countryCode) {
-			return { countryCode, locationName: lastPart };
-		}
-		// If not found, continue with other methods below
-	}
-
-	// Step 2: Try direct match with country name
-	const directMatchCode = searchCountrybyName(countryToCheck);
-	if (directMatchCode) {
-		return { countryCode: directMatchCode, locationName: countryToCheck };
-	}
-
-	// Step 3: Check for common cities
-	const cityMatch = checkForCommonCities(text);
-	if (cityMatch) {
-		return { countryCode: cityMatch.code, locationName: cityMatch.name };
-	}
-
-	// Step 4: Check for common countries
-	const countryMatch = checkForCommonCountries(text);
-	if (countryMatch) {
-		return { countryCode: countryMatch.code, locationName: countryMatch.name };
-	}
-
-	// Step 5: Split text into words and check each word
-	const words = splitTextIntoWords(text);
-	for (const word of words) {
-		const wordCountryCode = searchCountrybyName(word);
-		if (wordCountryCode) {
-			return { countryCode: wordCountryCode, locationName: word };
-		}
-	}
-
-	// Step 6: Try to match city names in the words
-	for (const word of words) {
-		for (const [city, code] of Object.entries(popularCities)) {
-			if (
-				city.toLowerCase().includes(word.toLowerCase()) ||
-				word.toLowerCase().includes(city.toLowerCase())
-			) {
-				return { countryCode: code, locationName: city };
-			}
-		}
-	}
-
-	// Return empty if no match found
-	return { countryCode: "", locationName: "" };
-}
-
-export function convertCountrytoIndex(country: string): number {
-	return Object.keys(countryList).indexOf(country);
-}
-
-export function convertIndextoCountry(index: number): string {
-	return Object.keys(countryList)[index];
+	return getCountryFromText(text);
 }
