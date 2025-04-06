@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	request: Request,
-	context: { params: Promise<{ path: string[] }> }
+	context: { params: Promise<{ path: string[] }> },
 ) {
 	const { path } = await context.params;
 
@@ -88,10 +88,7 @@ export async function GET(
 		return streamResponse;
 	} catch (error) {
 		if (error instanceof Error) {
-			return NextResponse.json(
-				{ error: error.message },
-				{ status: 500 },
-			);
+			return NextResponse.json({ error: error.message }, { status: 500 });
 		}
 		return NextResponse.json(
 			{ error: "Failed to proxy stream" },

@@ -348,7 +348,7 @@ const AudioPlayer = ({
 			if (audioRef.current) {
 				setIsPlaying(true);
 				setError(null);
-				
+
 				// When audio actually starts playing, this is a good time to add to recently played
 				if (channelId && channelTitle) {
 					let stationTitleForRecent = channelTitle;
@@ -365,7 +365,11 @@ const AudioPlayer = ({
 					// Only record it if we actually have sound playing (after 1 second of playback)
 					setTimeout(() => {
 						if (audioRef.current && !audioRef.current.paused) {
-							addToRecentlyPlayed(stationTitleForRecent, channelId, locationInfo);
+							addToRecentlyPlayed(
+								stationTitleForRecent,
+								channelId,
+								locationInfo,
+							);
 						}
 					}, 1000);
 				}
@@ -743,11 +747,11 @@ const AudioPlayer = ({
 			const handleCanPlay = () => {
 				setError(null);
 			};
-			
-			audioElement.addEventListener('canplay', handleCanPlay);
-			
+
+			audioElement.addEventListener("canplay", handleCanPlay);
+
 			return () => {
-				audioElement.removeEventListener('canplay', handleCanPlay);
+				audioElement.removeEventListener("canplay", handleCanPlay);
 			};
 		}
 	}, []);

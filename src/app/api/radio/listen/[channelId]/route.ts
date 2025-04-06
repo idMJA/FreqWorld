@@ -27,7 +27,7 @@ interface ChannelData {
 
 export async function GET(
 	request: Request,
-	context: { params: Promise<{ channelId: string }> }
+	context: { params: Promise<{ channelId: string }> },
 ) {
 	try {
 		const { channelId } = await context.params;
@@ -52,7 +52,10 @@ export async function GET(
 			try {
 				searchData = JSON.parse(searchResponseText) as SearchResponse;
 			} catch (parseError) {
-				console.error(`Failed to parse JSON response for channel search ${channelId}:`, parseError);
+				console.error(
+					`Failed to parse JSON response for channel search ${channelId}:`,
+					parseError,
+				);
 				console.error(`Response text: ${searchResponseText}`);
 				return NextResponse.json(
 					{ error: "Invalid JSON response from search API" },
@@ -94,7 +97,10 @@ export async function GET(
 		try {
 			channelData = JSON.parse(channelResponseText) as ChannelData;
 		} catch (parseError) {
-			console.error(`Failed to parse JSON response for channel details ${channelId}:`, parseError);
+			console.error(
+				`Failed to parse JSON response for channel details ${channelId}:`,
+				parseError,
+			);
 			console.error(`Response text: ${channelResponseText}`);
 			return NextResponse.json(
 				{ error: "Invalid JSON response from channel API" },
@@ -116,7 +122,10 @@ export async function GET(
 			try {
 				titleSearchData = JSON.parse(titleSearchResponseText) as SearchResponse;
 			} catch (parseError) {
-				console.error(`Failed to parse JSON response for title search ${stationTitle}:`, parseError);
+				console.error(
+					`Failed to parse JSON response for title search ${stationTitle}:`,
+					parseError,
+				);
 				console.error(`Response text: ${titleSearchResponseText}`);
 				return NextResponse.json(
 					{ error: "Invalid JSON response from title search API" },

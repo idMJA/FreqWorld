@@ -3,9 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Channel } from "../utils/api";
 import { getColorByLetter } from "../utils/colorUtils";
-import {
-	detectLocationFromText,
-} from "../utils/country";
+import { detectLocationFromText } from "../utils/country";
 import Image from "next/image";
 
 // Diperluas dari interface Channel untuk menambahkan properti yang dibutuhkan

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function GET(
 	request: Request,
-	context: { params: Promise<{ placeId: string }> }
+	context: { params: Promise<{ placeId: string }> },
 ) {
 	const { placeId } = await context.params;
 
@@ -27,7 +27,10 @@ export async function GET(
 
 		const responseText = await response.text();
 		if (!responseText) {
-			return NextResponse.json({ error: "Empty response from API" }, { status: 500 });
+			return NextResponse.json(
+				{ error: "Empty response from API" },
+				{ status: 500 },
+			);
 		}
 		let data: unknown;
 		try {
@@ -42,10 +45,7 @@ export async function GET(
 		return NextResponse.json(data);
 	} catch (error) {
 		if (error instanceof Error) {
-			return NextResponse.json(
-				{ error: error.message },
-				{ status: 500 },
-			);
+			return NextResponse.json({ error: error.message }, { status: 500 });
 		}
 		return NextResponse.json(
 			{ error: "Failed to fetch place channels" },
