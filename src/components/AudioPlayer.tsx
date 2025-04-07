@@ -44,9 +44,12 @@ const AudioPlayer = ({
 	const [randomFinderMode, setRandomFinderMode] = useState(false);
 	const [randomFinderTimer, setRandomFinderTimer] =
 		useState<NodeJS.Timeout | null>(null);
+	const [reconnectAttempts, setReconnectAttempts] = useState(0);
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const visualizerRef = useRef<HTMLDivElement | null>(null);
 	const audioMotionRef = useRef<AudioMotionAnalyzer | null>(null);
+	const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
+	const lastPlaybackTime = useRef<number>(0);
 
 	// Load volume from cookie on component mount
 	useEffect(() => {
@@ -470,31 +473,142 @@ const AudioPlayer = ({
 		}
 	}, []);
 
+	// Handle reconnection
+	const handleReconnect = useCallback(() => {
+		if (!audioRef.current || !streamUrl) return;
+
+		setReconnectAttempts(prev => {
+			if (prev >= 3) {
+				setError("Failed to maintain connection. Please try selecting the station again.");
+				return 0;
+			}
+			return prev + 1;
+		});
+
+		// Force reload the audio element
+		audioRef.current.load();
+		audioRef.current.play().catch(err => {
+			console.error("Reconnection failed:", err);
+		});
+	}, [streamUrl]);
+
+	// Add error handling for stream disconnection
+	useEffect(() => {
+		const audioElement = audioRef.current;
+		if (!audioElement) return;
+
+		const handleError = (e: Event) => {
+			console.error("Audio error:", e);
+			setError("Stream disconnected. Attempting to reconnect...");
+			setIsPlaying(false);
+			handleReconnect();
+		};
+
+		const handleStalled = () => {
+			console.log("Stream stalled, attempting to recover...");
+			handleReconnect();
+		};
+
+		const handleEnded = () => {
+			console.log("Stream ended, attempting to reconnect...");
+			handleReconnect();
+		};
+
+		audioElement.addEventListener('error', handleError);
+		audioElement.addEventListener('stalled', handleStalled);
+		audioElement.addEventListener('ended', handleEnded);
+
+		return () => {
+			audioElement.removeEventListener('error', handleError);
+			audioElement.removeEventListener('stalled', handleStalled);
+			audioElement.removeEventListener('ended', handleEnded);
+		};
+	}, [handleReconnect]);
+
+	// Add heartbeat mechanism to keep stream alive
+	useEffect(() => {
+		if (!isPlaying || !audioRef.current) return;
+
+		const checkPlayback = () => {
+			if (audioRef.current) {
+				const currentTime = audioRef.current.currentTime;
+				
+				// If playback hasn't progressed in 5 seconds, try to reconnect
+				if (currentTime === lastPlaybackTime.current) {
+					console.log("Playback stalled, attempting to reconnect...");
+					handleReconnect();
+				} else {
+					lastPlaybackTime.current = currentTime;
+				}
+			}
+		};
+
+		// Check every 5 seconds
+		heartbeatInterval.current = setInterval(checkPlayback, 5000);
+
+		return () => {
+			if (heartbeatInterval.current) {
+				clearInterval(heartbeatInterval.current);
+			}
+		};
+	}, [isPlaying, handleReconnect]);
+
+	// Update audio source when streamUrl changes
+	useEffect(() => {
+		const audioElement = audioRef.current;
+		if (!audioElement || !streamUrl) return;
+
+		// Reset reconnection attempts when stream URL changes
+		setReconnectAttempts(0);
+
+		// Set up the audio source
+		audioElement.src = streamUrl;
+		audioElement.load();
+
+		// Play if autoPlay is set
+		if (autoPlay) {
+			const playAudio = async () => {
+				try {
+					await audioElement.play();
+					setIsPlaying(true);
+					setError(null);
+				} catch (err) {
+					console.error("Error playing audio:", err);
+					setIsPlaying(false);
+					setError("Failed to play audio. Autoplay may be blocked by your browser.");
+				}
+			};
+			playAudio();
+		}
+
+		return () => {
+			if (audioElement) {
+				audioElement.pause();
+				audioElement.src = "";
+			}
+		};
+	}, [streamUrl, autoPlay]);
+
 	// Handle play/pause
 	const togglePlayPause = () => {
 		if (!audioRef.current || !streamUrl) return;
 
-		if (isPlaying) {
-			audioRef.current.pause();
-		} else {
-			audioRef.current.play().catch((err) => {
-				console.error("Error playing audio:", err);
-
-				// Check if error is related to the stream URL not being accessible (404)
-				const errorMessage = err.toString();
-				if (
-					errorMessage.includes("404") ||
-					streamUrl?.includes("/api/radio/stream/")
-				) {
-					setError(
-						"Radio station is currently not accessible. Please try again later or select another station.",
-					);
+		const playAudio = async () => {
+			try {
+				if (isPlaying) {
+					audioRef.current?.pause();
+					setIsPlaying(false);
 				} else {
-					setError("Failed to play audio. The stream may be unavailable.");
+					await audioRef.current?.play();
+					setIsPlaying(true);
+					setError(null);
 				}
-			});
-		}
-		setIsPlaying(!isPlaying);
+			} catch (err) {
+				console.error("Error toggling play/pause:", err);
+				setError("Failed to play audio. Please try again.");
+			}
+		};
+		playAudio();
 	};
 
 	// Handle volume change
@@ -548,35 +662,6 @@ const AudioPlayer = ({
 		],
 	);
 
-	// Handle audio errors
-	useEffect(
-		() => {
-			// Store the current value of audioRef to use in cleanup function
-			const audio = audioRef.current;
-
-			// Rest of the effect code
-			const handleError = () => {
-				setError(
-					"Error playing station. Please try again or select a different station.",
-				);
-				setIsPlaying(false);
-			};
-
-			if (audio) {
-				audio.addEventListener("error", handleError);
-			}
-
-			return () => {
-				if (audio) {
-					audio.removeEventListener("error", handleError);
-				}
-			};
-		},
-		[
-			/* your dependencies */
-		],
-	);
-
 	// Toggle randomFinder mode
 	const toggleRandomFinderMode = () => {
 		setRandomFinderMode((prev) => !prev);
@@ -589,6 +674,11 @@ const AudioPlayer = ({
 
 			if (audioRef.current) {
 				audioRef.current.muted = newMutedState;
+				
+				// When unmuting, restore the previous volume
+				if (!newMutedState) {
+					audioRef.current.volume = volume / 100;
+				}
 			}
 
 			return newMutedState;
@@ -707,54 +797,6 @@ const AudioPlayer = ({
 			clearInterval(timer);
 		};
 	}, [randomFinderMode, channelId, addToRecentlyPlayed, randomFinderTimer]);
-
-	// Fix the specific useEffect with the warning on line 351
-	useEffect(() => {
-		// Store the current value of audioRef.current in a variable within the effect
-		const audioElement = audioRef.current;
-
-		if (loading || !channelId || !streamUrl) return;
-
-		if (audioElement) {
-			audioElement.src = streamUrl;
-			audioElement.load();
-
-			// Play if autoPlay is set
-			if (autoPlay) {
-				audioElement.play().catch((err) => {
-					console.error("Error playing audio:", err);
-					setIsPlaying(false);
-					setError(
-						"Failed to play audio. Autoplay may be blocked by your browser.",
-					);
-				});
-			}
-		}
-
-		// Use the captured audioElement in cleanup
-		return () => {
-			if (audioElement) {
-				audioElement.pause();
-				audioElement.src = "";
-			}
-		};
-	}, [loading, channelId, streamUrl, autoPlay]);
-
-	// Add canplay event listener to clear errors when audio is ready to play
-	useEffect(() => {
-		const audioElement = audioRef.current;
-		if (audioElement) {
-			const handleCanPlay = () => {
-				setError(null);
-			};
-
-			audioElement.addEventListener("canplay", handleCanPlay);
-
-			return () => {
-				audioElement.removeEventListener("canplay", handleCanPlay);
-			};
-		}
-	}, []);
 
 	return (
 		<div className="audio-player w-full card border border-gray-800 bg-black">

@@ -239,7 +239,7 @@ const countryList: { [key: string]: string | string[] } = {
 	UG: "Uganda",
 	UA: "Ukraine",
 	AE: "United Arab Emirates",
-	GB: "United Kingdom of Great Britain and Northern Ireland",
+	GB: "United Kingdom",
 	US: ["United States", "United States Minor Outlying Islands"],
 	UY: "Uruguay",
 	UZ: "Uzbekistan",
